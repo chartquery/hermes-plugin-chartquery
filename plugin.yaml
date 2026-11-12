@@ -1,6 +1,6 @@
 name: chartquery
-version: 1.0.0
-description: "Tools to render charts, QR codes and barcodes as shareable images, through the ChartQuery API."
+version: 1.1.0
+description: "Charts, diagrams, QR codes and barcodes for Hermes: Chart.js charts from a config or a plain-words prompt, Mermaid, D2, PlantUML and 25 more diagram languages, styled QR codes and 25+ barcode types, returned as shareable image links, through the ChartQuery API."
 author: ChartQuery
 license: MIT
 requires_hermes: ">=0.21.6"
@@ -9,6 +9,9 @@ provides_tools:
   - chartquery_chart_from_prompt
   - chartquery_qrcode
   - chartquery_barcode
+  - chartquery_diagram
+  - chartquery_diagram_from_prompt
+  - chartquery_usage
 provides_hooks: []
 provides_middleware: []
 requires_env:

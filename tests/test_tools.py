@@ -96,7 +96,7 @@ def run(name, args):
 
 def test_register_declares_every_tool():
     registered = tools()
-    assert sorted(registered) == sorted(['chartquery_chart', 'chartquery_chart_from_prompt', 'chartquery_qrcode', 'chartquery_barcode'])
+    assert sorted(registered) == sorted(['chartquery_chart', 'chartquery_chart_from_prompt', 'chartquery_qrcode', 'chartquery_barcode', 'chartquery_diagram', 'chartquery_diagram_from_prompt', 'chartquery_usage'])
     for name, tool in registered.items():
         assert tool["toolset"] == "chartquery"
         assert tool["schema"]["name"] == name
@@ -121,7 +121,7 @@ def test_missing_required_argument(api_key, calls):
     assert calls == []
 
 
-@pytest.mark.parametrize("name,args,url", [('chartquery_chart', {'config': {'type': 'bar', 'data': {'labels': ['a'], 'datasets': [{'data': [1]}]}}}, 'https://api.chartquery.com/v1/chart?share=true&query=%7B%22type%22%3A%22bar%22%2C%22data%22%3A%7B%22labels%22%3A%5B%22a%22%5D%2C%22datasets%22%3A%5B%7B%22data%22%3A%5B1%5D%7D%5D%7D%7D'), ('chartquery_chart_from_prompt', {'prompt': 'Bar chart of sales by month', 'raw_data': 'Jan,1\nFeb,2'}, 'https://api.chartquery.com/v1/chart/ai?share=true&prompt=Bar+chart+of+sales+by+month&raw_data=Jan%2C1%0AFeb%2C2'), ('chartquery_qrcode', {'data': 'https://example.com', 'format': 'png', 'size': 300}, 'https://api.chartquery.com/v1/qrcode?share=true&data=https%3A%2F%2Fexample.com&format=png&size=300'), ('chartquery_barcode', {'data': 'https://example.com', 'type': 'ean13', 'format': 'png'}, 'https://api.chartquery.com/v1/barcode?share=true&data=https%3A%2F%2Fexample.com&type=ean13&format=png')])
+@pytest.mark.parametrize("name,args,url", [('chartquery_chart', {'config': {'type': 'bar', 'data': {'labels': ['a'], 'datasets': [{'data': [1]}]}}}, 'https://api.chartquery.com/v1/chart?share=true&query=%7B%22type%22%3A%22bar%22%2C%22data%22%3A%7B%22labels%22%3A%5B%22a%22%5D%2C%22datasets%22%3A%5B%7B%22data%22%3A%5B1%5D%7D%5D%7D%7D'), ('chartquery_chart_from_prompt', {'prompt': 'Bar chart of sales by month', 'raw_data': 'Jan,1\nFeb,2'}, 'https://api.chartquery.com/v1/chart/ai?share=true&prompt=Bar+chart+of+sales+by+month&raw_data=Jan%2C1%0AFeb%2C2'), ('chartquery_qrcode', {'data': 'https://example.com', 'format': 'png', 'size': 300}, 'https://api.chartquery.com/v1/qrcode?share=true&data=https%3A%2F%2Fexample.com&format=png&size=300'), ('chartquery_barcode', {'data': 'https://example.com', 'type': 'ean13', 'format': 'png'}, 'https://api.chartquery.com/v1/barcode?share=true&data=https%3A%2F%2Fexample.com&type=ean13&format=png'), ('chartquery_diagram', {'source': 'graph TD; A-->B'}, 'https://api.chartquery.com/v1/diagram?share=true&type=mermaid&query=graph+TD%3B+A--%3EB'), ('chartquery_diagram', {'source': 'a -> b', 'language': 'd2', 'format': 'png'}, 'https://api.chartquery.com/v1/diagram?share=true&type=d2&query=a+-%3E+b&format=png'), ('chartquery_diagram_from_prompt', {'prompt': 'Login flow', 'language': 'plantuml', 'format': 'png'}, 'https://api.chartquery.com/v1/diagram/ai?share=true&prompt=Login+flow&diagram_type=plantuml&output_format=png'), ('chartquery_chart_from_prompt', {'prompt': 'Sales', 'legend': 'false', 'width': 800}, 'https://api.chartquery.com/v1/chart/ai?share=true&prompt=Sales&legend=false&width=800'), ('chartquery_usage', {}, 'https://api.chartquery.com/v1/usage')])
 def test_each_tool_calls_its_endpoint(api_key, calls, name, args, url):
     calls.respond({"ok": True})
     assert run(name, args) == {"ok": True}
@@ -139,3 +139,11 @@ def test_api_error_message_is_returned(api_key, calls):
 def test_network_error(api_key, calls):
     calls.unreachable()
     assert run('chartquery_chart', {'config': {'type': 'bar', 'data': {'labels': ['a'], 'datasets': [{'data': [1]}]}}}) == {"error": "ChartQuery: could not reach the API"}
+
+
+def test_manifest_lists_every_tool():
+    from pathlib import Path
+
+    manifest = (Path(__file__).resolve().parents[1] / "plugin.yaml").read_text()
+    listed = {line.strip()[2:] for line in manifest.splitlines() if line.strip().startswith("- chartquery_")}
+    assert listed == set(tools())
